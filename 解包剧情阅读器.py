@@ -3,7 +3,7 @@ import re
 # 要读取的文件路径
 path = './'
 # 要读取的文件名
-filename = "a"
+filename = "如我所见-我所思不止于此"
 # 文件后缀
 houzhui = ".txt"
 
@@ -57,6 +57,6 @@ spath = './'
 # 要保存的文件名
 sfilename = filename+"_jiexi"+".txt"
 
-with open(spath+sfilename, 'w') as f:
+with open(spath+sfilename, 'w', encoding = 'utf-8') as f:
     for i in jiexijuqing:
         f.write("\n"+i)
