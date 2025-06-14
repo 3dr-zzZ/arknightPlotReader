@@ -1,62 +1,62 @@
+import os
 import re
 
-# 要读取的文件路径
-path = './'
-# 要读取的文件名
-filename = "如我所见-我所思不止于此"
-# 文件后缀
-houzhui = ".txt"
+def process_file(input_file_path, output_file_path):
+    with open(input_file_path, 'r', encoding='utf-8') as f:
+        juqing = f.readlines()
 
-with open(path+filename+houzhui, 'r',encoding='utf-8') as f:
-    juqing = f.readlines()
+    re_mingzi = re.compile(r'name="(.*)"]')
+    re_duihua = re.compile(r']\s*(.*)')
+    re_huifu = re.compile(r'"(.*)",')
+    re_xuanxiang = re.compile(r'"(.*)"')
 
-re_mingzi = re.compile('name="(.*)"]')
-re_duihua = re.compile(']\s*(.*)')
-re_huifu = re.compile('"(.*)",')
-re_xuanxiang = re.compile('"(.*)"')
+    jiexijuqing = []
 
-jiexijuqing=[]
+    for i in juqing:
+        if i[:5] == "[Name" or i[:5] == "[name":
+            mingzi = re_mingzi.findall(i)
+            duihua = re_duihua.findall(i)
+            if mingzi and duihua:
+                jiexijuqing.append(mingzi[0] + ": " + duihua[0])
 
-for i in juqing:
-    # 第一种类型 对话
-    if i[:5] == "[Name" or i[:5] =="[name":
-        mingzi=re_mingzi.findall(i)
-        duihua=re_duihua.findall(i)
-        
-        # print(mingzi[0]+": "+duihua[0])
-        jiexijuqing.append(mingzi[0]+": "+duihua[0])
-    
-    # 第二种类型 无人物文字
-    if i[:5] =="[Dial" or i[:5] =="[dial" :
-        # print("")
-        jiexijuqing.append("")
-    
-    # 第三种类型 选择支
-    if i[:5] =="[Deci" or i[:5] =="[deci" :
-        huifulist = re_huifu.findall(i)[0].split(";")
-        # print("\n下面是可选择的回复：")
-        jiexijuqing.append("\n下面是可选择的回复：")
-        j = 1
-        for huifu in huifulist:
-            # print("    选项{}：".format(j)+huifu)
-            jiexijuqing.append("    选项{}：".format(j)+huifu)
-            j+=1
-    if i[:5] =="[Pred" or i[:5] =="[pred" :
-        xuanxianglist = re_xuanxiang.findall(i)
-        
-        # print("\n下面是回复选项{}的剧情：".format(xuanxianglist))
-        jiexijuqing.append("\n下面是回复选项{}的剧情：".format(xuanxianglist))
-    
-    # 遇到文字直接输出
-    if i[:1] !="[":
-        # print(i)
-        jiexijuqing.append(i)
+        elif i[:5] == "[Dial" or i[:5] == "[dial":
+            jiexijuqing.append("")
 
-# 要保存的文件路径
-spath = './'
-# 要保存的文件名
-sfilename = filename+"_jiexi"+".txt"
+        elif i[:5] == "[Deci" or i[:5] == "[deci":
+            huifulist = re_huifu.findall(i)[0].split(";")
+            jiexijuqing.append("\n下面是可选择的回复：")
+            for j, huifu in enumerate(huifulist, 1):
+                jiexijuqing.append(f"    选项{j}：" + huifu)
 
-with open(spath+sfilename, 'w', encoding = 'utf-8') as f:
-    for i in jiexijuqing:
-        f.write("\n"+i)
+        elif i[:5] == "[Pred" or i[:5] == "[pred":
+            xuanxianglist = re_xuanxiang.findall(i)
+            jiexijuqing.append(f"\n下面是回复选项{xuanxianglist}的剧情：")
+
+        elif not i.startswith("["):
+            jiexijuqing.append(i.strip())
+
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, 'w', encoding='utf-8') as f:
+        for line in jiexijuqing:
+            f.write(line + '\n')
+
+def main():
+    input_root = input("请输入包含文本文件的文件夹路径: ").strip('"')
+    output_root = input("请输入输出处理后文件的文件夹路径: ").strip('"')
+
+    for dirpath, _, filenames in os.walk(input_root):
+        for filename in filenames:
+            if filename.endswith(".txt"):
+                full_input_path = os.path.join(dirpath, filename)
+
+                # Preserve relative path
+                rel_path = os.path.relpath(full_input_path, input_root)
+                name, _ = os.path.splitext(rel_path)
+                rel_output_path = name + "_jiexi.txt"
+
+                full_output_path = os.path.join(output_root, rel_output_path)
+                print(f"正在处理: {full_input_path} -> {full_output_path}")
+                process_file(full_input_path, full_output_path)
+
+if __name__ == "__main__":
+    main()
